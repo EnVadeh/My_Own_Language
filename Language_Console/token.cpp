@@ -6,14 +6,25 @@
 #include <vector>
 #include <cstdio>
 
+//initialising the static variable
+int TOKEN_COUNTER_STRUCT::counter = 0;
+int TOKEN_COUNTER_STRUCT::max_token = 0;
+//wanted to tokenize for an entire line, but I think I shoudl tokenize until there's a semicolon because then the smicolon has an actual usage
+
 //problem: if special symbols are right next to the alphanumeric values, they're not tokenized!
 TOKEN_T* tokenizer(char* src, int itype) {
     TOKEN_T* token = new(struct TOKEN_STRUCT);
-    size_t len = strlen(src);
-    token->value = new char[len + 1];
-    strncpy(token->value, src, len); //try using strncpy_s to prevent bfufer problems
-    token->value[len] = '\0';
-    token->types = static_cast<TOKEN_STRUCT::type>(itype);
+    if (src == 0 ) {
+        token->types = token->TOKEN_EOF;
+        return nullptr;
+    }
+    else {
+        size_t len = strlen(src);
+        token->value = new char[len + 1];
+        strncpy(token->value, src, len); //try using strncpy_s to prevent bfufer problems
+        token->value[len] = '\0';
+        token->types = static_cast<TOKEN_STRUCT::type>(itype);
+    }
     return token;
 }
 
@@ -82,12 +93,13 @@ TOKEN_T* parse_num(LEXER_L* lexer) {
     return tokenizer(valuestr, TOKEN_STRUCT::TOKEN_INT);
 }
 
+// btw the eof function isn't printed because the while loop ends when it's eof... cause of nullptr
 TOKEN_T* lexer_next_token(LEXER_L* lexer) {
     while (lexer->c != '\0') {
         lexer_skip_space(lexer);
         if (isalpha(lexer->c))
             return lexer_advance_with(lexer, parse_id(lexer));
-        if (isdigit(lexer->c))
+        if (isdigit(lexer->c)) 
             return lexer_advance_with(lexer, parse_num(lexer));
         switch (lexer->c) {
         case '=':
@@ -128,12 +140,19 @@ TOKEN_T* lexer_next_token(LEXER_L* lexer) {
     return tokenizer(0, TOKEN_STRUCT::TOKEN_EOF);
 }
 
-TOKEN_COUNTER_STRUCT* store_token(TOKEN_T* token) {
+TOKEN_COUNTER_STRUCT* store_token() {
     TOKEN_COUNTER_STRUCT* token_storage = new(struct TOKEN_COUNTER_STRUCT[100]);
-    token_storage[token_storage->counter].token = token;
-    token_storage->counter++;
     return token_storage;
 }
+
+void store_add(TOKEN_T* tok, TOKEN_COUNTER_STRUCT* store) {
+    TOKEN_T newToken;
+    newToken = *tok;
+    store[store->counter].token = newToken;
+    store->counter++;
+    store->max_token++;
+}
+
 //NOTHER CHECK
 
 // check for gihub

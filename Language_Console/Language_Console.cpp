@@ -7,13 +7,13 @@
 #include "templ.hpp"
 
 int main() {
-	//compile_file("try.txt");
-    TOKEN_T* token = new(struct TOKEN_STRUCT);
-    std::string nam = "joe";
-    char* nam_ptr = &nam[0];
-    token->value = nam_ptr;
-    int itype = 5;
-    token->types = static_cast<TOKEN_STRUCT::type>(itype);
+	compile_file("try.txt");
+    //TOKEN_T* token = new(struct TOKEN_STRUCT);
+    //std::string nam = "joe";
+    //char* nam_ptr = &nam[0];
+    //token->value = nam_ptr;
+    //int itype = 5;
+    //token->types = static_cast<TOKEN_STRUCT::type>(itype);
     //Make_Tree(store);
     
 }

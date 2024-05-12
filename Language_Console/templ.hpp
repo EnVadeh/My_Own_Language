@@ -1,11 +1,12 @@
 #pragma once
 #include "token.h"
 #include <iostream>
+
 template <typename Node_Type>
-Node_Type* make_node(TOKEN_T* token) {
+Node_Type* make_node(TOKEN_COUNTER_STRUCT* store, TOKEN_T* token) {
 	Node_Type* node = new Node_Type();
 	node->token = token->types;
-	node->position = node_pos(token);
+	node->position = node_pos(store, token);
 	if constexpr (std::is_same_v<Node_Type, AST_OPERATOR>) {
 		//node->op = token->value;
 		std::cout << "This is an operator node";

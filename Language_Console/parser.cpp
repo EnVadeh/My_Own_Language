@@ -9,19 +9,20 @@
 // thas why I created it as a static
 //also another problem, possibly is that I will delete the tokens and the store every line, i wonder what's gonna happen in the future..
 
+//the prev/current/next token is just copying the adress of the token
 TOKEN_T* token_prev(TOKEN_COUNTER_STRUCT* store) {
 	if ((store->counter) < 0) {
 		return nullptr;
 	}
 	else {
-		TOKEN_T* prev_token = store[(store->counter) - 1].token;
+		TOKEN_T* prev_token = &store[(store->counter) - 1].token;
 		return prev_token;
 	}
 }
 
 TOKEN_T* token_current(TOKEN_COUNTER_STRUCT* store) {
-		TOKEN_T* next_token = store[(store->counter) + 1].token;
-		return next_token;
+		TOKEN_T* current_token = &store[(store->counter) + 1].token;
+		return current_token;
 }
 
 TOKEN_T* token_next(TOKEN_COUNTER_STRUCT* store) {
@@ -29,17 +30,17 @@ TOKEN_T* token_next(TOKEN_COUNTER_STRUCT* store) {
 		return nullptr;
 	}
 	else {
-		TOKEN_T* next_token = store[(store->counter) + 1].token;
+		TOKEN_T* next_token = &store[(store->counter) + 1].token;
 		return next_token;
 	}
 }
 
-int node_pos(TOKEN_COUNTER_STRUCT* store) {
+int node_pos(TOKEN_COUNTER_STRUCT* store, TOKEN_T* tok) {
 	//each token has to check for the token before it and after it before putting it somewhere right? This is where grammar rules are supposed to be implemented I guess.
 	TOKEN_T* prev_token = token_prev(store);
-	TOKEN_T* current_token = token_current(store);
+	TOKEN_T* current_token = tok;
 	TOKEN_T* next_token = token_next(store);
-	//code here to determine position
+	//code here to determine position.. not determined yet
 	return 0;
 }
 ASTree* Make_Tree(TOKEN_COUNTER_STRUCT* store) {
@@ -48,6 +49,10 @@ ASTree* Make_Tree(TOKEN_COUNTER_STRUCT* store) {
 	while (store->counter<store->max_token) {
 		TOKEN_T* tok = token_current(store);
 		
+		//initalising these outside the switch case for less error
+		AST_OPERATOR* ast_o;
+		AST_VARIABLE* ast_v;
+		AST_NUMERAL* ast_n;
 	//these make tokens: //also right now i'm assuming that brackets and paranthesis are also operators
 		switch (tok->types) {
 		case 2:
@@ -60,13 +65,13 @@ ASTree* Make_Tree(TOKEN_COUNTER_STRUCT* store) {
 		case 9:
 		case 10:
 		case 11:
-			AST_OPERATOR * ast_o = make_node<AST_OPERATOR>(tok);
+			ast_o = make_node<AST_OPERATOR>(store, tok);
 			break;
 		case 0:
-			AST_VARIABLE * ast_v = make_node<AST_VARIABLE>(tok);
+			ast_v = make_node<AST_VARIABLE>(store, tok);
 			break;
 		case 1:
-			AST_NUMERAL * ast_n = make_node<AST_NUMERAL>(tok);
+			ast_n = make_node<AST_NUMERAL>(store, tok);
 			break;
 
 		default: std::cout << "The token type can't be parsed";

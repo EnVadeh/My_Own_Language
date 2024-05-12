@@ -34,7 +34,7 @@ typedef AST_NUMERAL AST_N;
 typedef AST_OPERATOR AST_O;
 typedef AST_VARIABLE AST_V;
 
-
+//right now it's a apointer, so only one can exist.. need to change this
 union AST {
 	AST_F* ast_f;
 	AST_N* ast_n;
@@ -50,7 +50,7 @@ typedef AST ASTree;
 TOKEN_T* token_prev(TOKEN_COUNTER_STRUCT* store);
 TOKEN_T* token_current(TOKEN_COUNTER_STRUCT* store);
 TOKEN_T* token_next(TOKEN_COUNTER_STRUCT* store);
-int node_pos(TOKEN_COUNTER_STRUCT* store);
+int node_pos(TOKEN_COUNTER_STRUCT* store, TOKEN_T* tok);
 
 ASTree* Make_Tree(TOKEN_COUNTER_STRUCT* store);
 //AST_OPERATOR* init_operator_node(TOKEN_T* token);
