@@ -48,7 +48,6 @@ int node_pos(TOKEN_COUNTER_STRUCT* store, TOKEN_T* tok) {
 
 
 void InputArray::MakeArray(TOKEN_COUNTER_STRUCT* store) {
-	//for some reason the array is starting to fill from 48
 	store->counter = 0; //to start the loop
 	while (store->counter < store->max_token) {
 		TOKEN_T* token = token_current(store); //temp token
@@ -63,20 +62,20 @@ void InputArray::MakeArray(TOKEN_COUNTER_STRUCT* store) {
 		case 8:
 		case 9:
 		case 10:
-		case 11:
-			AST_O * ast_o = new(struct AST_OPERATOR);
+		case 11: {
+			AST_O* ast_o = new(struct AST_OPERATOR);
 			ast_o = make_node<AST_OPERATOR>(store, token, ast_o);
 			this->InArray[ast_o->position].ast_o = ast_o;
-			break;
-		case 0:
-			AST_V * ast_v = new(struct AST_VARIABLE);
+			break; }
+		case 0: {
+			AST_V* ast_v = new(struct AST_VARIABLE);
 			ast_v = make_node<AST_VARIABLE>(store, token, ast_v);
-			this->InArray[ast_v->position].ast_v = ast_v;
-		case 1:
-			AST_N * ast_n = new(struct AST_NUMERAL);
+			this->InArray[ast_v->position].ast_v = ast_v; }
+		case 1: {
+			AST_N* ast_n = new(struct AST_NUMERAL);
 			ast_n = make_node<AST_NUMERAL>(store, token, ast_n);
 			this->InArray[ast_n->position].ast_n = ast_n;
-			break;
+			break; }
 
 		default: std::cout << "The token type can't be parsed";
 			break;
@@ -86,8 +85,6 @@ void InputArray::MakeArray(TOKEN_COUNTER_STRUCT* store) {
 	AST_E* ast_e = new(struct AST_ENDOFARRAY);
 	this->InArray[store->counter].ast_e->position = store->counter; //end of array token
 }
-
-
 
 
 //this will check grammars and check for input and output array using the inptr and outptr
