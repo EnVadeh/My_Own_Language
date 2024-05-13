@@ -55,7 +55,7 @@ void compile(char* src) {
         
         }
         std::cout << "Final store: " << token_store->max_token<< std::endl;
-        ASTree* tree = Make_Tree(token_store);
+        //ASTree* tree = Make_Tree(token_store);
         //make tree now here ->
 
         if (src[line_end] == '\0') {

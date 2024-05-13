@@ -34,7 +34,7 @@ TOKEN_T* token_next(TOKEN_COUNTER_STRUCT* store) {
 		return next_token;
 	}
 }
-
+ 
 int node_pos(TOKEN_COUNTER_STRUCT* store, TOKEN_T* tok) {
 	//each token has to check for the token before it and after it before putting it somewhere right? This is where grammar rules are supposed to be implemented I guess.
 	TOKEN_T* prev_token = token_prev(store);
@@ -43,18 +43,17 @@ int node_pos(TOKEN_COUNTER_STRUCT* store, TOKEN_T* tok) {
 	//code here to determine position.. not determined yet
 	return 0;
 }
-ASTree* Make_Tree(TOKEN_COUNTER_STRUCT* store) {
-	ASTree* Tree_A = new ASTree[100]; //for some reason the array is starting to fill from 48
+
+
+
+
+void InputArray::MakeArray(TOKEN_COUNTER_STRUCT* store) {
+	//for some reason the array is starting to fill from 48
 	store->counter = 0; //to start the loop
-	while (store->counter<store->max_token) {
-		TOKEN_T* tok = token_current(store);
-		
-		//initalising these outside the switch case for less error
-		AST_OPERATOR* ast_o;
-		AST_VARIABLE* ast_v;
-		AST_NUMERAL* ast_n;
-	//these make tokens: //also right now i'm assuming that brackets and paranthesis are also operators
-		switch (tok->types) {
+	while (store->counter < store->max_token) {
+		TOKEN_T* token = token_current(store); //temp token
+		//these make tokens: //also right now i'm assuming that brackets and paranthesis are also operators
+		switch (token->types) {
 		case 2:
 		case 3:
 		case 4:
@@ -65,55 +64,38 @@ ASTree* Make_Tree(TOKEN_COUNTER_STRUCT* store) {
 		case 9:
 		case 10:
 		case 11:
-			ast_o = make_node<AST_OPERATOR>(store, tok);
+			AST_O * ast_o = new(struct AST_OPERATOR);
+			ast_o = make_node<AST_OPERATOR>(store, token, ast_o);
+			this->InArray[ast_o->position].ast_o = ast_o;
 			break;
 		case 0:
-			ast_v = make_node<AST_VARIABLE>(store, tok);
-			break;
+			AST_V * ast_v = new(struct AST_VARIABLE);
+			ast_v = make_node<AST_VARIABLE>(store, token, ast_v);
+			this->InArray[ast_v->position].ast_v = ast_v;
 		case 1:
-			ast_n = make_node<AST_NUMERAL>(store, tok);
+			AST_N * ast_n = new(struct AST_NUMERAL);
+			ast_n = make_node<AST_NUMERAL>(store, token, ast_n);
+			this->InArray[ast_n->position].ast_n = ast_n;
 			break;
 
 		default: std::cout << "The token type can't be parsed";
+			break;
 		}
 		store->counter++;
 	}
-
-	return Tree_A;
+	AST_E* ast_e = new(struct AST_ENDOFARRAY);
+	this->InArray[store->counter].ast_e->position = store->counter; //end of array token
 }
 
 
-//AST_OPERATOR* init_operator_node(TOKEN_T* token) {
-//	AST_OPERATOR* ast_o = new(struct AST_OPERATOR);
-//	ast_o->op = token->value;
-//	ast_o->token = token->types;
-//	ast_o->position = '0';
-//	return ast_o;
-//}
-//AST_FUNCTION* init_function_node(TOKEN_T* token) {
-//	AST_FUNCTION* ast_f = new(struct AST_FUNCTION);
-//	ast_f->name = "node function";
-//	ast_f->token = '0';
-//	ast_f->position = '0';
-//	return ast_f;
-//}
-//AST_NUMERAL* init_numeral_node(TOKEN_T* token) {
-//	AST_NUMERAL* ast_n = new(struct AST_NUMERAL);
-//	//ast_n->value = static_cast<asn_value>(token->value); //change tokenizer for numbers.
-//	ast_n->token = '0';
-//	ast_n->position = '0';
-//	return ast_n;
-//}
-//AST_VARIABLE* init_variable_node(TOKEN_T* token) {
-//	AST_VARIABLE* ast_v = new(struct AST_VARIABLE);
-//	ast_v->name = "name";
-//	ast_v->token = '0';
-//	ast_v->position = '0';
-//	return ast_v;
-//}
+
+
+//this will check grammars and check for input and output array using the inptr and outptr
+void MakeThroughGrammar() {
+	int x = 0;
+}; 
 
 //use select case/switch while compiling to create ast depending ont he token value
-//change the position later using grammar rules
 
 //void main() {
 //	AST_OPERATOR* ast_o = init_operator_node();
