@@ -11,7 +11,7 @@ Node_Type* make_node(TOKEN_COUNTER_STRUCT* store, TOKEN_T* token, Node_Type* nod
 		//node->op = token->value;
 		std::cout << "This is an operator node";
 	}
-	else if constexpr (std::is_same_v<Node_Type, AST_FUNCTION>) {
+	else if constexpr (std::is_same_v<Node_Type, AST_VARIABLE>) {
 		//node->name = "node function";
 	}
 	else if constexpr (std::is_same_v<Node_Type, AST_NUMERAL>){
