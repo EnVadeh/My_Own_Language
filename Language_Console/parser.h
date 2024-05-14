@@ -84,6 +84,12 @@ struct TOKEN_ARRAY {
 };
 typedef TOKEN_ARRAY TokArray;
 
+struct AST {
+	TokArray* lhs;
+	TokArray* root;
+	TokArray* rhs;
+};
+
  //no need of stack, just check with other union
 class InputArray {
 public:
@@ -112,7 +118,7 @@ public:
 //rule 2 : term -> factor(xfactor)* | factor(/factor)*
 	void Grammar_rule_2(InputArray& InObj);
 
-//rule 3: factor -> "("expression")" | number | variable
+	//rule 3 : factor -> expression | variable | number
 	void Grammar_rule_3(InputArray& InObj);
 };
 
