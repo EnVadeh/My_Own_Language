@@ -67,6 +67,14 @@ union TOKEN_UNION {  //not making a tree anymore. just an input field
 };
 typedef TOKEN_UNION TokU;
 
+struct AST {
+	TOKEN_T* tok;
+	AST* root;
+	AST* left;
+	AST* right;
+};
+
+typedef AST ASTree;
 //I could use std::variant for tagged unions, its a moder cpp feature
 //remind to use that in other producsts or in here if I have time to learn it
 struct TOKEN_ARRAY {
@@ -84,11 +92,9 @@ struct TOKEN_ARRAY {
 };
 typedef TOKEN_ARRAY TokArray;
 
-struct AST {
-	TokArray* lhs;
-	TokArray* root;
-	TokArray* rhs;
-};
+//i make an ast that is a struct that consists of pointer to the token and to the left and the right
+// and after parsing, the token will be copied to the root node
+
 
  //no need of stack, just check with other union
 class InputArray {
@@ -101,35 +107,47 @@ public:
 class OutputArray {
 public:
 	TokArray OutArray[50];
-	int outptr;
+	int outptr = 0;
 
 	int PeekFunction(InputArray& InObj, int index);
 
+	void MakeThroughGrammar(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root);
 	//right nwo plan is for each function to call the other function
 	void PushArray(int push_times);
 
 // rule 0 : start -> expression;
 
-	void Grammar_rule_0(InputArray& InObj);
-//rule 1 : expression -> term(+term)* | term(-term)* | factor "=" factor
+	void Grammar_rule_0(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root);
+//rule 1 : expression -> term(+term)* | term(-term)* | factor "=" expressoin
 
-	void Grammar_rule_1(InputArray& InObj);
+	void Grammar_rule_sumsub(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root);
 
 //rule 2 : term -> factor(xfactor)* | factor(/factor)*
-	void Grammar_rule_2(InputArray& InObj);
+	//void Grammar_rule_2(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root);
 
-	//rule 3 : factor -> expression | variable | number
-	void Grammar_rule_3(InputArray& InObj);
+	//rule 3 : factor -> "("expression")" | variable | number
+//	void Grammar_rule_3(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root);
+
+	//void Grammar_rule_literal(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root); //will be useful for if functions? if(x+5 = z);
+
+	void Grammar_rule_assignment(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root);
 };
+
+//rule 0 : start-> expresion;
+//rule assignment: expression -> factor = expression;
+//rule brackets: expression -> "(" expression ")" //i have a question on how the fuck it'd ccheck for nested brackets
+//rule add/sub: expression -> term +|- term
+//rule mul/div: term->factor *|/ factor
+//rule literal:  expression -> numeral
+//rule recursion: factor -> expression|numeral|variable
 
 
 // with variables i want ot check if it exists at all..
 // also i want to check for the semicolon first and foremost
 
 
-void MakeThroughGrammar();
 //when making grammar, save a previous state whenever grammar is called in the output array to make sure I can backtrack
-
+ASTree* make_subtree(int pos, ASTree* itself, TOKEN_COUNTER_STRUCT* store, ASTree* root);
 //this is confusing:: Shoudl I create an ast as I lex? I guess I should wait for nextline and create an ast for that..
 // for this I need to change thej compiler.cpp function
 // new plan! Store tokens for each line only, and then reset the counter after the line's over?
@@ -140,3 +158,6 @@ int node_pos(TOKEN_COUNTER_STRUCT* store, TOKEN_T* tok);
 
 
 #endif
+
+//i have a new idea, parse parts of a program, expression, then if block etc etc
+//hardest thing is tryna make the ast, i just don't get it

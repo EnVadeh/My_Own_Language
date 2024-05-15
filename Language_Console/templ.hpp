@@ -8,8 +8,7 @@ Node_Type* make_node(TOKEN_COUNTER_STRUCT* store, TOKEN_T* token, Node_Type* nod
 	node->tok = token->types;
 	node->position = store->counter;
 	if constexpr (std::is_same_v<Node_Type, AST_OPERATOR>) {
-		//node->op = token->value;
-		std::cout << "This is an operator node";
+		//node->op = token->value
 	}
 	else if constexpr (std::is_same_v<Node_Type, AST_VARIABLE>) {
 		//node->name = "node function";

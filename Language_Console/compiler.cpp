@@ -57,7 +57,12 @@ void compile(char* src) {
         std::cout << "Final store: " << token_store->max_token<< std::endl;
         //ASTree* tree = Make_Tree(token_store);
         //make tree now here ->
-
+        InputArray InArr;
+        InArr.MakeArray(token_store);
+        OutputArray OutArr;
+        ASTree* root = new(struct AST);
+        OutArr.MakeThroughGrammar(InArr, token_store, root);
+        std::cout << "The tree is: " << root->tok->types;
         if (src[line_end] == '\0') {
             break;
         }
@@ -78,4 +83,5 @@ void compile_file(const char* filename) {
     std::string src_name = readfile(filename);
     char* src = &src_name[0];
     compile(src);
+
 }

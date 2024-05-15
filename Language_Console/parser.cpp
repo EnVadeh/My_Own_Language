@@ -21,7 +21,7 @@ TOKEN_T* token_prev(TOKEN_COUNTER_STRUCT* store) {
 }
 
 TOKEN_T* token_current(TOKEN_COUNTER_STRUCT* store) {
-		TOKEN_T* current_token = &store[(store->counter) + 1].token;
+		TOKEN_T* current_token = &store[(store->counter)].token;
 		return current_token;
 }
 
@@ -80,34 +80,89 @@ void InputArray::MakeArray(TOKEN_COUNTER_STRUCT* store) {
 			this->InArray[ast_n->position].discriminator = TokArray::AST_NUM;
 			break; 
 		}
-		default: std::cout << "The token type can't be parsed";
+		default: std::cout << "The token type can't be parsed" << std::endl;
 			break;
 		}
 		store->counter++;
 	}
-	AST_E* ast_e = new(struct AST_ENDOFARRAY);
-	this->InArray[store->counter].TokU.ast_e->position = store->counter; //end of array token
+	//AST_E* ast_e = new(struct AST_ENDOFARRAY);
+	//this->InArray[store->counter].TokU.ast_e->position = store->counter; //end of array token
 }
 
 int OutputArray::PeekFunction(InputArray& InObj, int index) {
 	int type = InObj.InArray[index].discriminator;
 	return type;
 }
+
+ASTree* make_subtree(int pos, ASTree* itself, TOKEN_COUNTER_STRUCT* store, ASTree* root) {
+	//root has to be an operator node
+	//so when passing a subtree to this function
+	itself->root = root;
+	itself->tok = &store[pos].token;
+	itself->left = new(struct AST);
+	itself->left->tok = &store[pos - 1].token;
+	itself->right = new(struct AST);
+	std::cout << "This is the current root token type: " << itself->tok->types << std::endl;
+	std::cout << "This is the current root left child type: " << itself->left->tok->types << std::endl;
+
+	return itself->right;
+	
+	
+}
 //array sould looik like this: [0]ast_ex, [1]ast_o->7(;), [2]ast_e
 //also only call this once
-void OutputArray::Grammar_rule_0(InputArray& InObj) {
+//the grammar will parse through each token from left to right, and if matched, i will call an ast function that will create a class?
+
+//maybe if I don't make it line by line, i can check if the right assigned variable has been assigned alrady or not
+void OutputArray::Grammar_rule_assignment(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root) {
+	int rhs = PeekFunction(InObj, outptr + 2); //if rihs has number it can need calculations
+	switch(rhs) {
+	case 0: {
+		delete OutArray[outptr].TokU.ast_ex;
+		AST_V* ast_v = new(struct AST_VARIABLE);
+		ast_v->position = 0;
+		OutArray[ast_v->position].discriminator = TOKEN_ARRAY::AST_VAR;
+		PushArray(2);
+		AST_O* ast_o = new(struct AST_OPERATOR);
+		ast_o->position = 1;
+		ast_o->tok = 2;
+		OutArray[ast_o->position].TokU.ast_o = ast_o;
+		OutArray[ast_o->position].discriminator = TOKEN_ARRAY::AST_OP;
+		AST_EX* ast_ex = new(struct AST_EXPRESSION);
+		ast_ex->position = 2;
+		OutArray[ast_ex->position].TokU.ast_ex = ast_ex;
+		OutArray[ast_ex->position].discriminator = TOKEN_ARRAY::AST_EXPR; 
+		outptr = outptr + 2;
+		make_subtree(outptr-1, root, store, nullptr); //it has no root node //why outptr-1? because it has parsed the op already and goes to the right of it, while tree needs to point to the op
+		//Grammar_rule_sumsub(InObj, store, root);
+		break; }
+	}
+}
+
+void OutputArray::Grammar_rule_0(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root) {
+	int check = PeekFunction(InObj, outptr);
+	if (check == 0) {
+		std::cout << "Literals go ont the right side of the equality sign" << std::endl;
+		return;
+	}
 	InObj.inptr = 0;
 	outptr = 0;
 	AST_EX* ast_ex = new(struct AST_EXPRESSION);
 	ast_ex->position = 0;
 	OutArray[ast_ex->position].TokU.ast_ex = ast_ex;
+	OutArray[ast_ex->position].discriminator = TOKEN_ARRAY::AST_EXPR;
 	AST_O* ast_o = new(struct AST_OPERATOR);
 	ast_o->tok = 7;
 	ast_o->position = 1;
 	OutArray[ast_o->position].TokU.ast_o = ast_o;
-	AST_E* ast_e = new(struct AST_ENDOFARRAY);
-	ast_e->position = 2;
-	OutArray[ast_e->position].TokU.ast_e = ast_e;
+	OutArray[ast_o->position].discriminator = TOKEN_ARRAY::AST_OP;
+	//AST_E* ast_e = new(struct AST_ENDOFARRAY);
+	//ast_e->position = 2;
+	//OutArray[ast_e->position].TokU.ast_e = ast_e;
+	int decide_rule = PeekFunction(InObj, outptr);
+	if (decide_rule == 2) {
+		Grammar_rule_assignment(InObj, store, root);
+	}
 }
  //probably should've used a template function but I remembered it too late
 void OutputArray::PushArray(int push_times) {
@@ -173,8 +228,9 @@ void OutputArray::PushArray(int push_times) {
 	}
 
 }
+
 //each function calls another function but before that chceks if inptrobj = outptrobj and if it is then increment it
-void OutputArray::Grammar_rule_1(InputArray& InObj) { 
+void OutputArray::Grammar_rule_sumsub(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root) {
 	int type = PeekFunction(InObj, outptr+1);
 	switch (type) {
 	case 0: //there's another num???
@@ -187,7 +243,7 @@ void OutputArray::Grammar_rule_1(InputArray& InObj) {
 			AST_T* ast_t1 = new(struct AST_TERM);
 			ast_t1->position = outptr;
 			OutArray[ast_t1->position].TokU.ast_t = ast_t1;
-			PushArray(3); //push the array forward by 3
+			PushArray(2); //push the array forward by 3
 			AST_O* ast_o = new(struct AST_OPERATOR);
 			ast_o->position = outptr + 1;
 			ast_o->tok = 8;
@@ -201,7 +257,7 @@ void OutputArray::Grammar_rule_1(InputArray& InObj) {
 			AST_F* ast_f1 = new(struct AST_FACTOR);
 			ast_f1->position = outptr;
 			OutArray[ast_f1->position].TokU.ast_f = ast_f1;
-			PushArray(3); //push the array forward by 3
+			PushArray(2); //push the array forward by 3
 			AST_O* ast_o = new(struct AST_OPERATOR);
 			ast_o->position = outptr + 1;
 			ast_o->tok = 2;
@@ -215,7 +271,7 @@ void OutputArray::Grammar_rule_1(InputArray& InObj) {
 			AST_T* ast_t1 = new(struct AST_TERM);
 			ast_t1->position = outptr;
 			OutArray[ast_t1->position].TokU.ast_t = ast_t1;
-			PushArray(3); //push the array forward by 3
+			PushArray(2); //push the array forward by 3
 			AST_O* ast_o = new(struct AST_OPERATOR);
 			ast_o->position = outptr + 1;
 			ast_o->tok = 9;
@@ -238,10 +294,8 @@ void OutputArray::Grammar_rule_1(InputArray& InObj) {
 
 //this will check grammars and check for input and output array using the inptr and outptr
 //remember peek funciton to "predict" some sort
-void MakeThroughGrammar() {
-	int x = 0;
-}; 
-void Grammar_rule_0() {
+void OutputArray::MakeThroughGrammar(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root) {
+	Grammar_rule_0(InObj, store, root);
 }
 
 //use select case/switch while compiling to create ast depending ont he token value
