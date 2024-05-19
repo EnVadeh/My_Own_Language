@@ -75,6 +75,8 @@ struct AST {
 };
 
 typedef AST ASTree;
+//Make ast, make left first, return right or return a new root node and then call its left child
+// the origina root node and check if its nullptr and add a right hcild
 //I could use std::variant for tagged unions, its a moder cpp feature
 //remind to use that in other producsts or in here if I have time to learn it
 struct TOKEN_ARRAY {
@@ -86,7 +88,7 @@ struct TOKEN_ARRAY {
 		AST_END,
 		AST_FACT,
 		AST_EXPR,
-		AST_TERM
+		cAST_TERM
 	}
 	discriminator;
 };
@@ -122,6 +124,7 @@ public:
 
 	void Grammar_rule_sumsub(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root);
 
+	void Grammar_rule_Paranthesis(InputArray& Inobj, TOKEN_COUNTER_STRUCT* store, ASTree* root);
 //rule 2 : term -> factor(xfactor)* | factor(/factor)*
 	//void Grammar_rule_2(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root);
 
@@ -140,11 +143,13 @@ public:
 //rule mul/div: term->factor *|/ factor
 //rule literal:  expression -> numeral
 //rule recursion: factor -> expression|numeral|variable
+//i think i'll create an assignment rule like I have, then an "arithematic" rule which will create only an arithematic tree???
 
 
 // with variables i want ot check if it exists at all..
 // also i want to check for the semicolon first and foremost
 
+int check_tok_value(InputArray& InObj, int index);
 
 //when making grammar, save a previous state whenever grammar is called in the output array to make sure I can backtrack
 ASTree* make_subtree(int pos, ASTree* itself, TOKEN_COUNTER_STRUCT* store, ASTree* root);
