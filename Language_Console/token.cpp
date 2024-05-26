@@ -2,13 +2,15 @@
 #include "token.h"
 #include <cctype>
 #include <iostream>
-#include <string.h>
+#include <string>
 #include <vector>
 #include <cstdio>
 
 //initialising the static variable
 int TOKEN_COUNTER_STRUCT::counter = 0;
 int TOKEN_COUNTER_STRUCT::max_token = 0;
+
+
 //wanted to tokenize for an entire line, but I think I shoudl tokenize until there's a semicolon because then the smicolon has an actual usage
 
 //problem: if special symbols are right next to the alphanumeric values, they're not tokenized!
@@ -152,6 +154,10 @@ void store_add(TOKEN_T* tok, TOKEN_COUNTER_STRUCT* store) {
     store->counter++;
     store->max_token++;
 }
+
+
+
+
 
 
 //NOTHER CHECK

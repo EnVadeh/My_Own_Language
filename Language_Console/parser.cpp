@@ -10,6 +10,26 @@
 //also another problem, possibly is that I will delete the tokens and the store every line, i wonder what's gonna happen in the future..
 
 //the prev/current/next token is just copying the adress of the token
+int VARIABLE_TABLE_STRUCT::table_counter = 0;
+int VARIABLE_TABLE_STRUCT::table_max = 0;
+bool before_equals;
+
+VARIABLE_TABLE_STRUCT* init_table() {
+	VARIABLE_TABLE_STRUCT* table = new(struct VARIABLE_TABLE_STRUCT[50]);
+	return table;
+}
+
+void table_add(TOKEN_T* tok, VARIABLE_TABLE_STRUCT* VT) {
+	//std::cout << "Here's what should be added to the table at row: " << VT->table_counter << " " << tok->value << std::endl;
+	VT[VT->table_counter].variable = tok->value; //reason i do this is cause vt is a pointer to an array
+	VT->table_counter++;
+	VT->table_max++;
+	//std::cout << "Here's what is being added to the table at row: " << (VT->table_counter)-1 << " " << VT->variable << std::endl;
+}
+TOKEN_T* token_indexed(TOKEN_COUNTER_STRUCT* store, int index){
+	return &store[index].token;
+}
+
 TOKEN_T* token_prev(TOKEN_COUNTER_STRUCT* store) {
 	if ((store->counter) < 0) {
 		return nullptr;
@@ -45,7 +65,7 @@ int node_pos(TOKEN_COUNTER_STRUCT* store, TOKEN_T* tok) {
 }
 
 
-int check_tok_value(InputArray& InObj, int index) {
+int check_tok_type(InputArray& InObj, int index) {
 	int discriminator = InObj.InArray[index].discriminator;
 	int tok = 100;
 	switch(discriminator) {
@@ -65,6 +85,8 @@ int check_tok_value(InputArray& InObj, int index) {
 	}
 	return tok;
 }
+
+
 
 void InputArray::MakeArray(TOKEN_COUNTER_STRUCT* store) {
 	store->counter = 0; //to start the loop
@@ -107,7 +129,6 @@ void InputArray::MakeArray(TOKEN_COUNTER_STRUCT* store) {
 		store->counter++;
 	}
 	AST_E* ast_e = new(struct AST_ENDOFARRAY);
-	std::cout<< "This is the counter: "<<store->counter << std::endl;
 	ast_e->position = store->counter;
 	this->InArray[store->counter].discriminator = TOKEN_ARRAY::discriminator::AST_END;
 	this->InArray[store->counter].TokU.ast_e = ast_e; //end of array token
@@ -142,18 +163,23 @@ ASTree* make_subtree(int pos, ASTree* itself, TOKEN_COUNTER_STRUCT* store, ASTre
 
 void OutputArray::Grammar_rule_Paranthesis(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root) {
 	int tok_type = 100;
-	int onwards_right = 1;
+	int onwards_right = 0;
 	while (tok_type != 72) {
+		tok_type = check_tok_type(InObj, onwards_right);
 		if (tok_type == 4) {
 			break;
 		}
-		tok_type = check_tok_value(InObj, onwards_right);
 		onwards_right++;
-
 	}
-	if (onwards_right >= store->max_token) {
-		std::cout << "Expected: ')' after '('" << std::endl;
-		return;
+	if (onwards_right >= store->max_token || onwards_right == outptr + 1) {
+		if (onwards_right == outptr+1) {
+			std::cout << "Expected an expressoin between '(' and ')'" << std::endl;
+			return;
+		}
+		else {
+			std::cout << "Expected: ')' after '('" << std::endl;
+			return;
+		}
 	}
 	else {
 		PushArray(2);
@@ -182,6 +208,7 @@ void OutputArray::Grammar_rule_assignment(InputArray& InObj, TOKEN_COUNTER_STRUC
 		delete OutArray[outptr].TokU.ast_ex;
 		AST_V* ast_v = new(struct AST_VARIABLE);
 		ast_v->position = 0;
+		OutArray[ast_v->position].TokU.ast_v = ast_v;
 		OutArray[ast_v->position].discriminator = TOKEN_ARRAY::AST_VAR;
 		PushArray(2);
 		AST_O* ast_o = new(struct AST_OPERATOR);
@@ -208,6 +235,7 @@ void OutputArray::Grammar_rule_assignment(InputArray& InObj, TOKEN_COUNTER_STRUC
 			AST_V* ast_v = new(struct AST_VARIABLE);
 			ast_v->position = 0;
 			OutArray[ast_v->position].discriminator = TOKEN_ARRAY::AST_VAR;
+			OutArray[ast_v->position].TokU.ast_v = ast_v;
 			PushArray(2);
 			AST_O* ast_o = new(struct AST_OPERATOR);
 			ast_o->position = 1;
@@ -231,7 +259,7 @@ void OutputArray::Grammar_rule_assignment(InputArray& InObj, TOKEN_COUNTER_STRUC
 void OutputArray::Grammar_rule_0(InputArray& InObj, TOKEN_COUNTER_STRUCT* store, ASTree* root) {
 	int check = PeekFunction(InObj, outptr);
 	if (check == 0) {
-		std::cout << "Literals go ont the right side of the equality sign" << std::endl;
+		std::cout << "ERROR: Literals go on the right side of the equality sign!" << std::endl;
 		return;
 	}
 	InObj.inptr = 0;
@@ -249,10 +277,12 @@ void OutputArray::Grammar_rule_0(InputArray& InObj, TOKEN_COUNTER_STRUCT* store,
 	ast_e->position = 2;
 	OutArray[ast_e->position].discriminator = TOKEN_ARRAY::AST_END;
 	OutArray[ast_e->position].TokU.ast_e = ast_e;
-	int decide_rule = check_tok_value(InObj, outptr + 1);
+	int decide_rule = check_tok_type(InObj, outptr + 1);
 	int temp = OutArray[2].TokU.ast_e->tok;
 	if (decide_rule == 2) {
-		std::cout << "This is the thing: " << decide_rule << std::endl;
+		VARIABLE_TABLE_STRUCT* VT = init_table();
+		table_add(token_indexed(store, outptr), VT);
+		std::cout << "The table has variable: " << VT[(VT->table_counter) - 1].variable << " in row: " << (VT->table_counter) - 1 << std::endl;
 		Grammar_rule_assignment(InObj, store, root);
 	}
 }
@@ -273,6 +303,7 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			ast_n = this->OutArray[outptr + to_the_right].TokU.ast_n;
 			ast_n->position++;
 			this->OutArray[outptr + push_times + to_the_right].TokU.ast_n = ast_n;
+			//this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_NUM;
 			delete this->OutArray[outptr + to_the_right].TokU.ast_n;
 			break;
 		}
@@ -281,6 +312,7 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			ast_o = this->OutArray[outptr + to_the_right].TokU.ast_o;
 			ast_o->position++;
 			this->OutArray[outptr + push_times + to_the_right].TokU.ast_o = ast_o;
+			//this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_OP;
 			delete this->OutArray[outptr + to_the_right].TokU.ast_o;
 			break; }
 		case 2: { //variable on the right
@@ -288,6 +320,7 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			ast_v = this->OutArray[outptr + to_the_right].TokU.ast_v;
 			ast_v->position++;
 			this->OutArray[outptr + push_times + to_the_right].TokU.ast_v = ast_v;
+			//this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_VAR;
 			delete this->OutArray[outptr + to_the_right].TokU.ast_v;
 			break;
 		}
@@ -296,6 +329,7 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			ast_e = this->OutArray[outptr + to_the_right].TokU.ast_e;
 			ast_e->position++;
 			this->OutArray[outptr + push_times + to_the_right].TokU.ast_e = ast_e;
+			//this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_END;
 			delete this->OutArray[outptr + to_the_right].TokU.ast_e;
 			break;
 		}
@@ -304,6 +338,7 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			ast_f = this->OutArray[outptr + to_the_right].TokU.ast_f;
 			ast_f->position++;
 			this->OutArray[outptr + push_times + to_the_right].TokU.ast_f = ast_f;
+			//this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_FACT;
 			delete this->OutArray[outptr + to_the_right].TokU.ast_f;
 			break;
 		}
@@ -311,7 +346,9 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			AST_EX* ast_ex = new(struct AST_EXPRESSION);
 			ast_ex = this->OutArray[outptr + to_the_right].TokU.ast_ex;
 			ast_ex->position++;
-			this->OutArray[outptr + push_times + to_the_right].TokU.ast_ex = ast_ex;
+			//this->OutArray[outptr + push_times + to_the_right].TokU.ast_ex = ast_ex;
+			this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_EXPR;
+
 			delete this->OutArray[outptr + to_the_right].TokU.ast_ex;
 			break;
 		}
@@ -319,7 +356,8 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			AST_T* ast_t = new(struct AST_TERM);
 			ast_t = this->OutArray[outptr + to_the_right].TokU.ast_t;
 			ast_t->position++;
-			this->OutArray[outptr + push_times + to_the_right].TokU.ast_t = ast_t;
+			//this->OutArray[outptr + push_times + to_the_right].TokU.ast_t = ast_t;
+			this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_TERM;
 			delete this->OutArray[outptr + to_the_right].TokU.ast_t;
 			break;
 		}
@@ -338,7 +376,7 @@ void OutputArray::Grammar_rule_sumsub(InputArray& InObj, TOKEN_COUNTER_STRUCT* s
 		std::cout << "Parse error, expected an operator between 2 numbers" << std::endl;
 		return;
 		break;
-	case 1: {
+	case 1: { //remember to add the discriminator for each one
 		if ((InObj.InArray[outptr + 1].TokU.ast_o->tok) == 8) {  //addition
 			delete OutArray[outptr].TokU.ast_ex;
 			AST_T* ast_t1 = new(struct AST_TERM);

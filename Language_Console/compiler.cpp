@@ -6,6 +6,7 @@
 #include "parser.h"
 #include "templ.hpp"
 
+
 std::string readfile(const char* filename) {
     std::ifstream file(filename, std::ios::in);
     if (!file.is_open()) {
@@ -24,6 +25,10 @@ std::string readfile(const char* filename) {
 
 // fix the loop so that it works a line at a time, so until semicolon
 //maybe a prbolem is that the array has only pointers to the same tok
+//i can either parse each line and then throw error before making IR, or I can throw error before parsing all teh lines  
+
+
+//right now the way the table works is it looks at all the left variable to the equal sign, but I need to only have the variable that's right before the equal sign
 void compile(char* src) {
     LEXER_L* lexer = init_lexer(src);
     TOKEN_T* tok = nullptr;
@@ -54,7 +59,7 @@ void compile(char* src) {
             delete tok;
         
         }
-        std::cout << "Final store: " << token_store->max_token<< std::endl;
+        //std::cout << "Final store: " << token_store[1].token.value<< std::endl;
         //ASTree* tree = Make_Tree(token_store);
         //make tree now here ->
         InputArray InArr;
@@ -62,13 +67,16 @@ void compile(char* src) {
         OutputArray OutArr;
         ASTree* root = new(struct AST);
         OutArr.MakeThroughGrammar(InArr, token_store, root);
-        std::cout << "The tree is: " << root->tok->types;
+        //std::cout << "The tree is: " << root->tok->types;
+        std::cout << "Line starts at: " << line_start << std::endl;
+        std::cout << "Line ends at: " << line_end << std::endl;
         if (src[line_end] == '\0') {
             break;
         }
         line_start = line_end + 1;
         line_end = line_start;
     }
+
 
     /*while (((tok = lexer_next_token(lexer)) != nullptr) && (tok->types != TOKEN_STRUCT::TOKEN_SCOLON) ) {
         if (tok != nullptr) {

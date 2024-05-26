@@ -88,11 +88,19 @@ struct TOKEN_ARRAY {
 		AST_END,
 		AST_FACT,
 		AST_EXPR,
-		cAST_TERM
+		AST_TERM
 	}
 	discriminator;
 };
 typedef TOKEN_ARRAY TokArray;
+
+
+struct VARIABLE_TABLE_STRUCT {
+	static int table_counter;
+	static int table_max;
+	std::string variable;
+};
+
 
 //i make an ast that is a struct that consists of pointer to the token and to the left and the right
 // and after parsing, the token will be copied to the root node
@@ -149,17 +157,20 @@ public:
 // with variables i want ot check if it exists at all..
 // also i want to check for the semicolon first and foremost
 
-int check_tok_value(InputArray& InObj, int index);
+int check_tok_type(InputArray& InObj, int index);
 
 //when making grammar, save a previous state whenever grammar is called in the output array to make sure I can backtrack
 ASTree* make_subtree(int pos, ASTree* itself, TOKEN_COUNTER_STRUCT* store, ASTree* root);
 //this is confusing:: Shoudl I create an ast as I lex? I guess I should wait for nextline and create an ast for that..
 // for this I need to change thej compiler.cpp function
 // new plan! Store tokens for each line only, and then reset the counter after the line's over?
+TOKEN_T* token_indexed(TOKEN_COUNTER_STRUCT* store, int index);
 TOKEN_T* token_prev(TOKEN_COUNTER_STRUCT* store);
 TOKEN_T* token_current(TOKEN_COUNTER_STRUCT* store);
 TOKEN_T* token_next(TOKEN_COUNTER_STRUCT* store);
 int node_pos(TOKEN_COUNTER_STRUCT* store, TOKEN_T* tok);
+VARIABLE_TABLE_STRUCT* init_table();
+void table_add(TOKEN_T* tok, VARIABLE_TABLE_STRUCT* VT);
 
 
 #endif
