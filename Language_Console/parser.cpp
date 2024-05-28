@@ -64,7 +64,6 @@ int node_pos(TOKEN_COUNTER_STRUCT* store, TOKEN_T* tok) {
 	return 0;
 }
 
-
 int check_tok_type(InputArray& InObj, int index) {
 	int discriminator = InObj.InArray[index].discriminator;
 	int tok = 100;
@@ -85,8 +84,6 @@ int check_tok_type(InputArray& InObj, int index) {
 	}
 	return tok;
 }
-
-
 
 void InputArray::MakeArray(TOKEN_COUNTER_STRUCT* store) {
 	store->counter = 0; //to start the loop
@@ -198,6 +195,8 @@ void OutputArray::Grammar_rule_Paranthesis(InputArray& InObj, TOKEN_COUNTER_STRU
 		ast_o2->tok = 4;
 		OutArray[ast_o2->position].discriminator = TOKEN_ARRAY::AST_OP;
 		OutArray[ast_o2->position].TokU.ast_o = ast_o2;
+		outptr++;//going right towards the expression token
+		Grammar_rule_sumsub(InObj, store, root);
 	}
 }
 
@@ -222,7 +221,7 @@ void OutputArray::Grammar_rule_assignment(InputArray& InObj, TOKEN_COUNTER_STRUC
 		OutArray[ast_ex->position].discriminator = TOKEN_ARRAY::AST_EXPR; 
 		outptr = outptr + 2;
 		//make_subtree(outptr-1, root, store, nullptr); //it has no root node //why outptr-1? because it has parsed the op already and goes to the right of it, while tree needs to point to the op
-		//Grammar_rule_sumsub(InObj, store, root);
+		Grammar_rule_sumsub(InObj, store, root);
 		break; }
 	case 1: {
 		
@@ -293,7 +292,7 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 	int temp = OutArray[2].discriminator;
 	while (type != TokArray::discriminator::AST_END) { 
 		to_the_right++;
-		type = OutArray[outptr + to_the_right].discriminator;
+		type = OutArray[outptr + to_the_right].discriminator; //error here because i forgot to add end of funtion to each line through grammar rules
 	}
 	while (to_the_right != 0) {
 		type = OutArray[outptr + to_the_right].discriminator;
@@ -314,7 +313,8 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			this->OutArray[outptr + push_times + to_the_right].TokU.ast_o = ast_o;
 			//this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_OP;
 			delete this->OutArray[outptr + to_the_right].TokU.ast_o;
-			break; }
+			break; 
+		}
 		case 2: { //variable on the right
 			AST_V* ast_v = new(struct AST_VARIABLE);
 			ast_v = this->OutArray[outptr + to_the_right].TokU.ast_v;
@@ -346,9 +346,8 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			AST_EX* ast_ex = new(struct AST_EXPRESSION);
 			ast_ex = this->OutArray[outptr + to_the_right].TokU.ast_ex;
 			ast_ex->position++;
-			//this->OutArray[outptr + push_times + to_the_right].TokU.ast_ex = ast_ex;
-			this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_EXPR;
-
+			this->OutArray[outptr + push_times + to_the_right].TokU.ast_ex = ast_ex;
+			//this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_EXPR;
 			delete this->OutArray[outptr + to_the_right].TokU.ast_ex;
 			break;
 		}
@@ -356,8 +355,8 @@ void OutputArray::PushArray(int push_times) { //i need to start pushing form the
 			AST_T* ast_t = new(struct AST_TERM);
 			ast_t = this->OutArray[outptr + to_the_right].TokU.ast_t;
 			ast_t->position++;
-			//this->OutArray[outptr + push_times + to_the_right].TokU.ast_t = ast_t;
-			this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_TERM;
+			this->OutArray[outptr + push_times + to_the_right].TokU.ast_t = ast_t;
+			//this->OutArray[outptr + push_times + to_the_right].discriminator = TOKEN_ARRAY::AST_TERM;
 			delete this->OutArray[outptr + to_the_right].TokU.ast_t;
 			break;
 		}
@@ -382,42 +381,51 @@ void OutputArray::Grammar_rule_sumsub(InputArray& InObj, TOKEN_COUNTER_STRUCT* s
 			AST_T* ast_t1 = new(struct AST_TERM);
 			ast_t1->position = outptr;
 			OutArray[ast_t1->position].TokU.ast_t = ast_t1;
+			OutArray[ast_t1->position].discriminator = TOKEN_ARRAY::AST_TERM;
 			PushArray(2); //push the array forward by 3
 			AST_O* ast_o = new(struct AST_OPERATOR);
 			ast_o->position = outptr + 1;
 			ast_o->tok = 8;
 			OutArray[ast_o->position].TokU.ast_o = ast_o;
+			OutArray[ast_o->position].discriminator = TOKEN_ARRAY::AST_OP;
 			AST_T* ast_t2 = new(struct AST_TERM);
 			ast_t2->position = outptr + 2;
 			OutArray[ast_t2->position].TokU.ast_t = ast_t2;
+			OutArray[ast_t2->position].discriminator = TOKEN_ARRAY::AST_TERM;
 		}
 		else if((InObj.InArray[outptr + 1].TokU.ast_o->tok) == 2) {  //equals
 			delete OutArray[outptr].TokU.ast_ex;
 			AST_F* ast_f1 = new(struct AST_FACTOR);
 			ast_f1->position = outptr;
 			OutArray[ast_f1->position].TokU.ast_f = ast_f1;
+			OutArray[ast_f1->position].discriminator = TOKEN_ARRAY::AST_FACT;
 			PushArray(2); //push the array forward by 3
 			AST_O* ast_o = new(struct AST_OPERATOR);
 			ast_o->position = outptr + 1;
 			ast_o->tok = 2;
 			OutArray[ast_o->position].TokU.ast_o = ast_o;
+			OutArray[ast_o->position].discriminator = TOKEN_ARRAY::AST_OP;
 			AST_F* ast_f2 = new(struct AST_FACTOR);
 			ast_f2->position = outptr + 2;
 			OutArray[ast_f2->position].TokU.ast_f = ast_f2;
+			OutArray[ast_f2->position].discriminator = TOKEN_ARRAY::AST_FACT;
 		}
 		else if ((InObj.InArray[outptr + 1].TokU.ast_o->tok) == 9) {  //addition
 			delete OutArray[outptr].TokU.ast_ex;
 			AST_T* ast_t1 = new(struct AST_TERM);
 			ast_t1->position = outptr;
 			OutArray[ast_t1->position].TokU.ast_t = ast_t1;
+			OutArray[ast_t1->position].discriminator = TOKEN_ARRAY::AST_TERM;
 			PushArray(2); //push the array forward by 3
 			AST_O* ast_o = new(struct AST_OPERATOR);
 			ast_o->position = outptr + 1;
 			ast_o->tok = 9;
 			OutArray[ast_o->position].TokU.ast_o = ast_o;
+			OutArray[ast_o->position].discriminator = TOKEN_ARRAY::AST_OP;
 			AST_T* ast_t2 = new(struct AST_TERM);
 			ast_t2->position = outptr + 2;
 			OutArray[ast_t2->position].TokU.ast_t = ast_t2;
+			OutArray[ast_t2->position].discriminator = TOKEN_ARRAY::AST_TERM;
 		}
 		else {
 			//check what type and grammar rule
